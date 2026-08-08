@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>afdx_generator</title>
+<link rel="stylesheet" href="/static/vendor/tabulator.min.css">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">afdx_generator</div>
+  <div class="project-controls">
+    <select id="project-select" title="Open a project"></select>
+    <button id="btn-new-project" class="btn">New</button>
+    <button id="btn-save" class="btn">Save</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="actions">
+    <span id="save-state" class="save-state"></span>
+    <button id="btn-generate" class="btn btn-primary">Generate</button>
+    <button id="btn-validate" class="btn btn-accent" title="Generate, then run the simulator">Generate &amp; Validate</button>
+  </div>
+</header>
+
+<div id="problems" class="problems hidden"></div>
+
+<main class="layout">
+  <section class="panel graph-panel">
+    <div class="panel-head">
+      <h2>Topology</h2>
+      <div class="panel-tools">
+        <button id="btn-add-es" class="btn btn-small">+ End system</button>
+        <button id="btn-add-sw" class="btn btn-small">+ Switch</button>
+        <button id="btn-delete-node" class="btn btn-small" title="Delete the selected node or link">Delete</button>
+        <button id="btn-layout" class="btn btn-small" title="Re-arrange automatically">Tidy</button>
+      </div>
+    </div>
+    <div id="cy"></div>
+    <p class="hint">
+      Drag from the handle on a node to draw a link. Click to select; drag to move.
+      You draw one network &mdash; the redundant A/B planes are generated automatically.
+    </p>
+  </section>
+
+  <section class="panel side-panel">
+    <div class="tabs">
+      <button class="tab tab-active" data-tab="vls">Virtual links</button>
+      <button class="tab" data-tab="settings">Settings</button>
+      <button class="tab" data-tab="env">Environment</button>
+      <button class="tab" data-tab="output">Output</button>
+    </div>
+
+    <div class="tab-body" id="tab-vls">
+      <div class="panel-tools">
+        <button id="btn-add-vl" class="btn btn-small">+ Virtual link</button>
+        <button id="btn-delete-vl" class="btn btn-small">Delete selected</button>
+        <span class="hint inline">rho/sigma fill in automatically &mdash; type a value to override.</span>
+      </div>
+      <div id="vl-table"></div>
+    </div>
+
+    <div class="tab-body hidden" id="tab-settings"></div>
+    <div class="tab-body hidden" id="tab-env"></div>
+    <div class="tab-body hidden" id="tab-output">
+      <div id="output-content" class="output-content">
+        <p class="hint">Generate the network to see results here.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Load order matters: edgehandles reads window._ at load time. See static/vendor/VENDOR_VERSIONS.md -->
+<script src="/static/vendor/lodash.min.js"></script>
+<script src="/static/vendor/cytoscape.min.js"></script>
+<script src="/static/vendor/cytoscape-edgehandles.js"></script>
+<script src="/static/vendor/tabulator.min.js"></script>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/state.js"></script>
+<script src="/static/js/graph_editor.js"></script>
+<script src="/static/js/vl_table.js"></script>
+<script src="/static/js/settings_panel.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

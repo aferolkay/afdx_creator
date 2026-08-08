@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Generated networks — regenerate them, don't commit them.
+output/
+
+# Machine-specific paths (OMNeT++ binary, library dirs). Never committed.
+env.json
