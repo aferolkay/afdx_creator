@@ -1,0 +1,410 @@
+{
+  "schema_version": 1,
+  "id": "f0a2eb5fa15d",
+  "name": "realisticNetwork",
+  "nodes": [
+    {
+      "id": "es1",
+      "kind": "end_system",
+      "label": "E0",
+      "x": 204.25501476334446,
+      "y": 435.3360410786364
+    },
+    {
+      "id": "es2",
+      "kind": "end_system",
+      "label": "E1",
+      "x": 347.89218270409725,
+      "y": 422.19572791927055
+    },
+    {
+      "id": "es3",
+      "kind": "end_system",
+      "label": "E2",
+      "x": -104.56639556189967,
+      "y": 448.26793164772096
+    },
+    {
+      "id": "es4",
+      "kind": "end_system",
+      "label": "E3",
+      "x": 563.9212703823586,
+      "y": 422.92507501884586
+    },
+    {
+      "id": "es5",
+      "kind": "end_system",
+      "label": "E4",
+      "x": -62.110931633231424,
+      "y": 648.7370852876028
+    },
+    {
+      "id": "es6",
+      "kind": "end_system",
+      "label": "E5",
+      "x": 548.1744996739527,
+      "y": 664.4645924903297
+    },
+    {
+      "id": "es7",
+      "kind": "end_system",
+      "label": "E6",
+      "x": -49.29819663292103,
+      "y": 723.9945219356017
+    },
+    {
+      "id": "es8",
+      "kind": "end_system",
+      "label": "E7",
+      "x": 517.1727619449948,
+      "y": 726.1079543097812
+    },
+    {
+      "id": "es9",
+      "kind": "end_system",
+      "label": "E8",
+      "x": 260.02724761219577,
+      "y": 794.3798826107934
+    },
+    {
+      "id": "es10",
+      "kind": "end_system",
+      "label": "E9",
+      "x": 276.2196656008312,
+      "y": 399.7287046364927
+    },
+    {
+      "id": "es11",
+      "kind": "end_system",
+      "label": "E10",
+      "x": 198.1294327021116,
+      "y": 754.3072465146025
+    },
+    {
+      "id": "es12",
+      "kind": "end_system",
+      "label": "E11",
+      "x": 320.34115842349433,
+      "y": 750.0990170517273
+    },
+    {
+      "id": "es13",
+      "kind": "end_system",
+      "label": "E12",
+      "x": -105.68942599585998,
+      "y": 532.9233939339201
+    },
+    {
+      "id": "es14",
+      "kind": "end_system",
+      "label": "E13",
+      "x": 570.1504346945463,
+      "y": 514.4228232655443
+    },
+    {
+      "id": "sw1",
+      "kind": "switch",
+      "label": "S1",
+      "x": 274.36772743310047,
+      "y": 552.7439551222715
+    },
+    {
+      "id": "sw2",
+      "kind": "switch",
+      "label": "S2",
+      "x": 101.72300511829434,
+      "y": 484.6111105909402
+    },
+    {
+      "id": "sw3",
+      "kind": "switch",
+      "label": "S3",
+      "x": 426.9630404937121,
+      "y": 465.79435959001603
+    },
+    {
+      "id": "sw4",
+      "kind": "switch",
+      "label": "S4",
+      "x": 96.39038168765958,
+      "y": 651.4619251392534
+    },
+    {
+      "id": "sw5",
+      "kind": "switch",
+      "label": "S5",
+      "x": 432.69127779713756,
+      "y": 673.2051901990471
+    },
+    {
+      "id": "es15",
+      "kind": "end_system",
+      "label": "E14",
+      "x": 244.56843684084276,
+      "y": 587.0155477414681
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "node_a_id": "es11",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e2",
+      "node_a_id": "es9",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e3",
+      "node_a_id": "es12",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e4",
+      "node_a_id": "es7",
+      "node_b_id": "sw4",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e5",
+      "node_a_id": "es5",
+      "node_b_id": "sw4",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e6",
+      "node_a_id": "es3",
+      "node_b_id": "sw2",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e7",
+      "node_a_id": "es13",
+      "node_b_id": "sw2",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e8",
+      "node_a_id": "es1",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e9",
+      "node_a_id": "es10",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e10",
+      "node_a_id": "es2",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e11",
+      "node_a_id": "es4",
+      "node_b_id": "sw3",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e12",
+      "node_a_id": "es14",
+      "node_b_id": "sw3",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e13",
+      "node_a_id": "es6",
+      "node_b_id": "sw5",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e14",
+      "node_a_id": "es8",
+      "node_b_id": "sw5",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e15",
+      "node_a_id": "sw5",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e16",
+      "node_a_id": "sw3",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e17",
+      "node_a_id": "sw2",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    },
+    {
+      "id": "e18",
+      "node_a_id": "sw4",
+      "node_b_id": "sw1",
+      "length_m": 10.0,
+      "datarate_bps": null
+    }
+  ],
+  "virtual_links": [
+    {
+      "id": "vl1",
+      "hex_vl_id": "0x1",
+      "label": "V1",
+      "frame_bytes": 53,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    },
+    {
+      "id": "vl2",
+      "hex_vl_id": "0x2",
+      "label": "V2",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    },
+    {
+      "id": "vl3",
+      "hex_vl_id": "0x3",
+      "label": "V3",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    },
+    {
+      "id": "vl4",
+      "hex_vl_id": "0x4",
+      "label": "V4",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    },
+    {
+      "id": "vl5",
+      "hex_vl_id": "0x5",
+      "label": "V5",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    },
+    {
+      "id": "vl6",
+      "hex_vl_id": "0x6",
+      "label": "V6",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
+    }
+  ],
+  "general_settings": {
+    "sigma_margin_factor": 4.0,
+    "frame_header_length_bytes": 47,
+    "phy_overhead_bits": 160,
+    "switch_fabric_delay_s": 0.00005,
+    "latency_tech_tx_delay_s": 0.00005,
+    "latency_tech_rx_delay_s": 0.00005,
+    "regulator_max_vlid_queue_size": 1000,
+    "scheduler_service_time_s": 0.0,
+    "skew_max_s": 0.01,
+    "skew_max_test_enabled": false,
+    "redundancy_copy_to_link_a": true,
+    "redundancy_copy_to_link_b": true,
+    "channel_datarate_bps": 100000000.0,
+    "channel_length_m": 10.0,
+    "network_id": 153,
+    "interface_id": 0,
+    "udp_src_port": 4660,
+    "udp_dest_port": 22136,
+    "seq_num_default": 0,
+    "route_table_path_prefix": "",
+    "validation_sim_time_limit_s": 1.0
+  },
+  "created_at": "2026-08-09T10:09:44.900279Z",
+  "updated_at": "2026-08-09T10:25:45.154793Z"
+}

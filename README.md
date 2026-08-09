@@ -10,6 +10,11 @@ frames), and the token-bucket policing parameters have a non-obvious correct val
 
 ![the editor](docs/screenshot.png)
 
+> **New here, or not a Python/JavaScript person?** Read
+> **[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md)** — it explains the whole program in plain terms,
+> follows your data from a mouse drag to a generated `.ned`, and has a "I want to change X, where do
+> I look?" table.
+
 ## Running it
 
 ```sh
