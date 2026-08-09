@@ -295,7 +295,8 @@ is how a bounded run is *supposed* to end).
 .venv/bin/python -m pytest        # ~1 second, checks nothing broke
 ```
 
-- Changed **JavaScript, CSS or HTML**? Just refresh the browser (Ctrl+R).
+- Changed **JavaScript, CSS or HTML**? Just refresh the browser (Ctrl+R). Asset URLs are stamped
+  with each file's modification time, so the browser cannot serve you a stale cached copy.
 - Changed **Python**? Stop the program (Ctrl+C) and start it again.
 - Changed something risky? Press **Generate & Validate** — the simulator is the real judge.
 

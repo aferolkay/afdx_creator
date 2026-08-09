@@ -7,85 +7,85 @@
       "id": "es0",
       "kind": "end_system",
       "label": "E0",
-      "x": 0.0,
-      "y": 0.0
+      "x": 439.9680606247092,
+      "y": 331.33838989696847
     },
     {
       "id": "es1",
       "kind": "end_system",
       "label": "E1",
-      "x": 0.0,
-      "y": 0.0
+      "x": 408.03220879432774,
+      "y": 223.83027905849795
     },
     {
       "id": "es2",
       "kind": "end_system",
       "label": "E2",
-      "x": 0.0,
-      "y": 0.0
+      "x": 180.6294136693702,
+      "y": 128.2313193644892
     },
     {
       "id": "es3",
       "kind": "end_system",
       "label": "E3",
-      "x": 0.0,
-      "y": 0.0
+      "x": 382.12182918189546,
+      "y": 107.33274839124047
     },
     {
       "id": "es4",
       "kind": "end_system",
       "label": "E4",
-      "x": 0.0,
-      "y": 0.0
+      "x": 408.6402752539169,
+      "y": 531.5770253366909
     },
     {
       "id": "es5",
       "kind": "end_system",
       "label": "E5",
-      "x": 0.0,
-      "y": 0.0
+      "x": 286.7988037833493,
+      "y": 469.8527324411659
     },
     {
       "id": "es6",
       "kind": "end_system",
       "label": "E6",
-      "x": 0.0,
-      "y": 0.0
+      "x": 23.0,
+      "y": 50.27889375133998
     },
     {
       "id": "sw1",
       "kind": "switch",
       "label": "S1",
-      "x": 0.0,
-      "y": 0.0
+      "x": 338.51774367234077,
+      "y": 323.2017561763048
     },
     {
       "id": "sw2",
       "kind": "switch",
       "label": "S2",
-      "x": 0.0,
-      "y": 0.0
+      "x": 282.07162858991506,
+      "y": 136.9018594063892
     },
     {
       "id": "sw3",
       "kind": "switch",
       "label": "S3",
-      "x": 0.0,
-      "y": 0.0
+      "x": 380.0813058664953,
+      "y": 431.4524019112356
     },
     {
       "id": "sw4",
       "kind": "switch",
       "label": "S4",
-      "x": 0.0,
-      "y": 0.0
+      "x": 231.14241060933125,
+      "y": 27.825381391841063
     },
     {
       "id": "sw5",
       "kind": "switch",
       "label": "S5",
-      "x": 0.0,
-      "y": 0.0
+      "x": 121.75057106825409,
+      "y": 27.0
     }
   ],
   "edges": [
@@ -179,6 +179,9 @@
       ],
       "bag_s": 0.001,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -197,6 +200,9 @@
       ],
       "bag_s": 0.002,
       "offset_s": 0.00152444,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -215,6 +221,9 @@
       ],
       "bag_s": 0.001,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -233,6 +242,9 @@
       ],
       "bag_s": 0.001,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -251,6 +263,9 @@
       ],
       "bag_s": 0.001,
       "offset_s": 0.0005036800000000001,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -269,6 +284,9 @@
       ],
       "bag_s": 0.002,
       "offset_s": 0.00048283999999999995,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -287,6 +305,9 @@
       ],
       "bag_s": 0.001,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -305,6 +326,9 @@
       ],
       "bag_s": 0.004,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -323,6 +347,9 @@
       ],
       "bag_s": 0.002,
       "offset_s": 0.0005233200000000001,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -341,6 +368,9 @@
       ],
       "bag_s": 0.002,
       "offset_s": 0.0015,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -359,6 +389,9 @@
       ],
       "bag_s": 0.002,
       "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -391,5 +424,5 @@
     "validation_sim_time_limit_s": 1.0
   },
   "created_at": "2026-08-09T05:10:54.298767Z",
-  "updated_at": "2026-08-09T05:10:54.298793Z"
+  "updated_at": "2026-08-09T11:35:49.168161Z"
 }
