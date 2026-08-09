@@ -33,13 +33,16 @@
       <div class="panel-tools">
         <button id="btn-add-es" class="btn btn-small">+ End system</button>
         <button id="btn-add-sw" class="btn btn-small">+ Switch</button>
+        <button id="btn-draw-link" class="btn btn-small"
+                title="Drag from one node onto another to connect them (shortcut: hold Shift)">Draw link</button>
         <button id="btn-delete-node" class="btn btn-small" title="Delete the selected node or link">Delete</button>
         <button id="btn-layout" class="btn btn-small" title="Re-arrange automatically">Tidy</button>
       </div>
     </div>
     <div id="cy"></div>
-    <p class="hint">
-      Drag from the handle on a node to draw a link. Click to select; drag to move.
+    <p class="hint" id="graph-hint">
+      Click <strong>Draw link</strong> (or hold <strong>Shift</strong>) and drag from one node onto
+      another to connect them. Otherwise drag to move, click to select.
       You draw one network &mdash; the redundant A/B planes are generated automatically.
     </p>
   </section>

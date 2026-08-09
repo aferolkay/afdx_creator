@@ -1,8 +1,10 @@
 /* Cytoscape topology editor: add nodes, drag to connect, move, delete. */
 window.GraphEditor = (function () {
   let cy = null;
-  let eh = null;      // edgehandles instance
+  let eh = null;        // edgehandles instance
   let suppress = false; // guard against reacting to our own programmatic changes
+  let drawMode = false; // link-drawing mode: drag from node to node creates a link
+  let shiftHeld = false; // Shift acts as a momentary draw mode
 
   const STYLE = [
     {
@@ -59,19 +61,26 @@ window.GraphEditor = (function () {
 
     eh = cy.edgehandles({
       snap: true,
+      // Validate against the project model, NOT the live cytoscape graph. During a drag,
+      // edgehandles adds its own preview edge from the source node -- counting that would make
+      // every end system look like it already had its one allowed link, silently refusing
+      // every connection.
       canConnect(source, target) {
-        if (source.id() === target.id()) return false;                       // no self loops
+        const project = Store.get();
+        if (!project) return false;
+        if (source.id() === target.id()) return false;                 // no self loops
         if (source.data("kind") === "end_system" && target.data("kind") === "end_system") {
-          return false;                                                      // ES-to-ES is not a thing
+          return false;                                                // end systems connect via switches
         }
-        // An end system has exactly one physical port.
+        const degree = (id) => project.edges.filter(
+          e => e.node_a_id === id || e.node_b_id === id).length;
+        // An end system has one port per redundancy plane, so exactly one cable.
         for (const node of [source, target]) {
-          if (node.data("kind") === "end_system" && node.degree(false) >= 1) return false;
+          if (node.data("kind") === "end_system" && degree(node.id()) >= 1) return false;
         }
-        return cy.edges().filter(e =>                                        // no duplicate links
-          (e.source().id() === source.id() && e.target().id() === target.id()) ||
-          (e.source().id() === target.id() && e.target().id() === source.id())
-        ).length === 0;
+        return !project.edges.some(e =>                                // no duplicate link
+          (e.node_a_id === source.id() && e.node_b_id === target.id()) ||
+          (e.node_a_id === target.id() && e.node_b_id === source.id()));
       },
     });
 
@@ -79,6 +88,18 @@ window.GraphEditor = (function () {
       // Remove the element edgehandles drew; the store is authoritative and re-renders it.
       added.remove();
       addEdge(source.id(), target.id());
+    });
+
+    // Explain a refusal rather than letting the drag silently do nothing.
+    cy.on("ehstop", (event, source) => {
+      const project = Store.get();
+      if (!project || !source) return;
+      const degree = project.edges.filter(
+        e => e.node_a_id === source.id() || e.node_b_id === source.id()).length;
+      if (source.data("kind") === "end_system" && degree >= 1) {
+        flashHint(`${source.data("label")} already has a link &mdash; an end system supports ` +
+                  `exactly one (it has one port per redundancy plane).`);
+      }
     });
 
     // Persist positions after a drag so the layout survives a reload.
@@ -97,13 +118,62 @@ window.GraphEditor = (function () {
     document.getElementById("btn-add-sw").onclick = () => addNode("switch");
     document.getElementById("btn-delete-node").onclick = deleteSelected;
     document.getElementById("btn-layout").onclick = () => runLayout(true);
+    document.getElementById("btn-draw-link").onclick = () => setDrawMode(!drawMode);
 
     document.addEventListener("keydown", (event) => {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-      if (!typing && (event.key === "Delete" || event.key === "Backspace")) {
+      if (typing) return;
+
+      if (event.key === "Delete" || event.key === "Backspace") {
         if (cy.$(":selected").length) { event.preventDefault(); deleteSelected(); }
       }
+      // Hold Shift to draw a link without leaving normal editing.
+      if (event.key === "Shift" && !shiftHeld && !drawMode) {
+        shiftHeld = true;
+        applyDrawMode(true);
+      }
+      if (event.key === "Escape" && drawMode) setDrawMode(false);
     });
+
+    document.addEventListener("keyup", (event) => {
+      if (event.key === "Shift" && shiftHeld) {
+        shiftHeld = false;
+        applyDrawMode(drawMode);
+      }
+    });
+
+    // Releasing Shift outside the window would otherwise leave draw mode stuck on.
+    window.addEventListener("blur", () => {
+      if (shiftHeld) { shiftHeld = false; applyDrawMode(drawMode); }
+    });
+  }
+
+  /* edgehandles v4 has no hover handle: drawing requires an explicit draw mode. */
+  function applyDrawMode(on) {
+    if (!eh) return;
+    if (on) eh.enableDrawMode(); else eh.disableDrawMode();
+    document.getElementById("cy").style.cursor = on ? "crosshair" : "";
+  }
+
+  function setDrawMode(on) {
+    drawMode = on;
+    applyDrawMode(on);
+    const button = document.getElementById("btn-draw-link");
+    button.classList.toggle("btn-toggle-active", on);
+    button.textContent = on ? "Drawing links..." : "Draw link";
+    const hint = document.getElementById("graph-hint");
+    if (hint) {
+      hint.innerHTML = on
+        ? "<strong>Drawing links:</strong> drag from one node onto another. " +
+          "Click <em>Drawing links...</em> again (or press Esc) to go back to moving nodes."
+        : defaultHint();
+    }
+  }
+
+  function defaultHint() {
+    return "Click <strong>Draw link</strong> (or hold <strong>Shift</strong>) and drag from one " +
+           "node onto another to connect them. Otherwise drag to move, click to select. " +
+           "You draw one network &mdash; the redundant A/B planes are generated automatically.";
   }
 
   function defaultLabel(kind, project) {
@@ -239,5 +309,32 @@ avoidOverlap: true,
 
   function fit() { if (cy) cy.fit(undefined, 40); }
 
-  return { init, render, fit, runLayout };
+  let hintTimer = null;
+  function flashHint(html) {
+    const hint = document.getElementById("graph-hint");
+    if (!hint) return;
+    hint.innerHTML = html;
+    hint.style.color = "var(--warn)";
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => {
+      hint.style.color = "";
+      hint.innerHTML = drawMode
+        ? "<strong>Drawing links:</strong> drag from one node onto another."
+        : defaultHint();
+    }, 4000);
+  }
+
+  /* Screen coordinates of a node, for tests and for anyone poking at this from the console.
+     (Note `window.cy` is the container div -- browsers expose elements by id -- not this.) */
+  function screenPosition(nodeId) {
+    if (!cy) return null;
+    const node = cy.$id(nodeId);
+    if (!node.length) return null;
+    const pos = node.renderedPosition();
+    const box = document.getElementById("cy").getBoundingClientRect();
+    return { x: box.x + pos.x, y: box.y + pos.y };
+  }
+
+  return { init, render, fit, runLayout, screenPosition, setDrawMode, defaultHint,
+           instance: () => cy };
 })();
