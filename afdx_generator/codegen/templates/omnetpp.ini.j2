@@ -67,8 +67,17 @@ network = {{ network_fqn }}
 # =====================================================================
 # VIRTUAL LINKS
 #
-# Per VL: {{ profile.source.inter_arrival_time }} and {{ profile.marshall.bag }} are the same BAG
-# value on two modules; {{ profile.source.start_time }} is the release offset.
+# Per VL: {{ profile.source.start_time }} is the release offset, and {{ profile.marshall.bag }} is
+# the minimum interval the BAG regulator enforces on the way out.
+#
+# {{ profile.source.inter_arrival_time }} is how often the application OFFERS a frame. For a
+# periodic link that is simply the BAG. For a sporadic link it is a random expression such as
+# uniform(2ms, 6ms), which the simulator redraws for every frame (the parameter is declared
+# volatile in NED, and the source re-reads it before scheduling each frame).
+#
+# A sporadic link whose gaps can fall below its BAG is legal, but the regulator holds those frames
+# back, which shows up as end-to-end latency well above the periodic case. If the *mean* gap drops
+# to or below the BAG, the regulator's queue grows without bound and the run aborts.
 #
 # rho is the VL's sustained rate, Lmax / BAG, where Lmax is the full wire frame
 # (payload + {{ s.frame_header_length_bytes }} header bytes) * 8 + {{ s.phy_overhead_bits }} bits of physical overhead.
@@ -83,10 +92,11 @@ network = {{ network_fqn }}
 
 # ---- {{ vl.label }} ({{ vl.route_key }}): {{ vl.source_label }} -> {{ vl.destination_labels | join(", ") }}
 #      route: {{ vl.path_description }}
+#      arrival: {{ vl.arrival_description }}
 #      Lmax = {{ vl.lmax_bits }} bits{% if not vl.rho_was_auto %} | rho set manually{% endif %}{% if not vl.sigma_was_auto %} | sigma set manually{% endif %}
 
 {{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.packet_length }} = {{ vl.payload_bytes }}
-{{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.inter_arrival_time }} = {{ fmt_time(vl.bag_s) }}
+{{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.inter_arrival_time }} = {{ vl.arrival_expression }}
 {% if vl.offset_s is not none %}
 {{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.start_time }} = {{ fmt_time(vl.offset_s) }}
 {% endif %}

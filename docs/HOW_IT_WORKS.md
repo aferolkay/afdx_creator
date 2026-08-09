@@ -270,6 +270,7 @@ is how a bounded run is *supposed* to end).
 | **Change the routing table format** | `codegen/templates/route_table.txt.j2` | Looks like a route table |
 | **The AFDX library renamed something** | `libraryprofile/profile.py` | A list of names; change the string. Read that folder's README first |
 | **Change the rho/sigma formula** | `trafficmath/rho_sigma.py` **and** `static/js/vl_table.js` | ⚠️ Two places — see the warning below |
+| **Add another arrival pattern** (e.g. exponential) | `models/virtual_link.py` (the `ArrivalPattern` list), `codegen/context.py` (build the expression), `static/js/vl_table.js` (the dropdown) | See §7b |
 | **Change routing** (e.g. prefer least-loaded over fewest-hops) | `routing/pathfinder.py` | |
 | **Add or relax a validation rule** | `domain/graph.py` | Each check adds a sentence to a list |
 | **Detect a new simulator error** | `validation/parser.py` | Add a pattern and the hint to show |
@@ -331,6 +332,52 @@ this reason.
 
 ---
 
+## 7b. Periodic and sporadic sources
+
+Each virtual link has an **Arrival** column with two choices.
+
+**periodic** (default) — one frame every BAG. The classic AFDX assumption, and what every project
+did before this field existed.
+
+**sporadic** — the gap between frames is drawn **uniformly at random** from a Min…Max range, redrawn
+for every frame. This is the "time between two consecutive frames changes uniformly and randomly"
+model. It generates:
+
+```ini
+...messageSource[0].interArrivalTime = uniform(2ms, 6ms)
+```
+
+This works with no change to the AFDX library, because the library's source re-reads
+`interArrivalTime` before scheduling each frame and the parameter is `volatile` in NED — meaning
+OMNeT++ re-evaluates the expression every time instead of fixing it at startup.
+
+**BAG is unaffected.** The Arrival column changes how often the application *offers* a frame; BAG
+still governs how often the link is *allowed* to emit one. `rho`/`sigma` are likewise unchanged,
+because the regulator still releases at most one frame per BAG.
+
+### The two ways to get this wrong
+
+Switching to sporadic defaults the bounds to **Min = BAG, Max = 2 × BAG**, which is safe. If you
+change them, two thresholds matter, and the table colours the cells to warn you:
+
+| Situation | Shown as | What happens |
+|---|---|---|
+| Min below BAG | orange | Legal. Bursts get held back by the regulator, so expect latency well above the periodic case |
+| **Mean at or below BAG** | **red** | The source outruns what BAG permits. The regulator's queue grows without bound and **the run aborts partway through** with `Max limit for VLID queue is reached` |
+
+Generation also warns about both in the Output panel. Measured on a 2 ms BAG link: `uniform(2ms,
+6ms)` gave a flat 199.9 µs end-to-end latency, while `uniform(0.5ms, 7.5ms)` — the *same* 4 ms mean,
+but dipping below BAG — ranged from 199.9 µs up to **3301.7 µs**.
+
+### Varying the frame size too
+
+The frame-size field is also `volatile`, so `intuniform(100, 1000)` works if you hand-edit the
+generated `.ini`. There is no column for it, and one caveat matters: **size `rho`/`sigma` from the
+largest frame the distribution can produce.** Sizing them for a nominal 256-byte frame while
+emitting up to 1000 bytes produced 184 dropped frames in a test.
+
+---
+
 ## 8. Things that will not be obvious
 
 **Hyphens break NED packages.** A network named `simple-network` makes the OMNeT++ loader fail with
@@ -347,6 +394,11 @@ port per redundancy plane. The editor refuses a second link and tells you why.
 
 **Multicast works.** One virtual link may have several destinations; the routing table gets several
 ports on one line (`0x1 : {1,2}`) and the switch duplicates the frame.
+
+**Two AFDX-library parameters are dead.** `Source_ext.deltaInterArrivalTimeMaxLimit` and
+`AFDXMarshall.deltaPacketLengthMaxLimit` are declared in the NED files and look exactly like jitter
+controls — but **no C++ file reads either of them**. Someone began implementing jitter and stopped.
+Setting them does nothing, silently. Use the sporadic Arrival pattern instead (§7b).
 
 **You draw one network, you get two.** The A and B planes are always identical mirrors. An
 intentionally asymmetric A/B network cannot currently be described.

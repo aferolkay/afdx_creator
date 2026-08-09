@@ -25,7 +25,7 @@ class GeneratedFiles:
         return [self.ned_file, self.ini_file, *self.route_table_files]
 
 
-def _format_time(seconds: float) -> str:
+def format_time(seconds: float) -> str:
     """Render a duration with a unit OMNeT++ accepts, preferring a readable magnitude.
 
     Exact values matter here: writing 0.0005s as "500us" must not introduce rounding, so the
@@ -116,7 +116,7 @@ def render_all(context: RenderContext, output_dir: FsPath) -> GeneratedFiles:
         switch_pairs=switch_pairs,
         vl_plans=context.vl_plans,
         route_table_path=route_table_path,
-        fmt_time=_format_time,
+        fmt_time=format_time,
         fmt_rate=_format_rate,
         fmt_number=_format_number,
     )

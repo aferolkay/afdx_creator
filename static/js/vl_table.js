@@ -12,6 +12,25 @@ window.VLTable = (function () {
     return (Number(payloadBytes) + Number(headerBytes)) * 8 + Number(phyOverheadBits);
   }
 
+  /* Min/Max only mean something for a sporadic link; show a dash otherwise so a stale number
+     never looks like it is in effect. Also warns inline when the value would misbehave. */
+  function sporadicOnly(cell) {
+    const row = cell.getRow().getData();
+    if (row.arrival_pattern !== "uniform") return '<span class="cell-auto">&mdash;</span>';
+    const value = Number(cell.getValue());
+    if (!isFinite(value)) return '<span class="cell-auto">&mdash;</span>';
+
+    const bag = Number(row.bag_ms);
+    const lo = Number(row.arrival_min_ms), hi = Number(row.arrival_max_ms);
+    const mean = (lo + hi) / 2;
+    // Mean at or below BAG eventually aborts the run; flag it in the table, not just at generate.
+    if (isFinite(mean) && mean <= bag) return `<span class="cell-bad">${trim(value)}</span>`;
+    if (cell.getField() === "arrival_min_ms" && value < bag) {
+      return `<span class="cell-warn">${trim(value)}</span>`;
+    }
+    return trim(value);
+  }
+
   /* Round-tripping seconds <-> microseconds leaves float noise (503.68 -> 503.68000000000006).
      Show a clean number without discarding a genuinely precise value. */
   function trim(value) {
@@ -64,8 +83,10 @@ window.VLTable = (function () {
 
   function init() {
     table = new Tabulator("#vl-table", {
-      // fitColumns keeps every column visible; fitDataStretch let the last one get cut off.
-      layout: "fitColumns",
+      // "fitData" honours each column's declared width and lets the table scroll sideways when
+      // they do not all fit. "fitColumns" squeezes everything into view instead, which silently
+      // pushed the rightmost columns (sigma, rho) out of reach once the arrival columns arrived.
+      layout: "fitData",
       height: "100%",
       selectableRows: true,
       placeholder: "No virtual links yet. Add one to describe a traffic stream.",
@@ -94,6 +115,21 @@ window.VLTable = (function () {
         { title: "Offset (us)", field: "offset_us", editor: "number", width: 92,
           formatter: (cell) => trim(cell.getValue()),
           tooltip: "Release offset of the first frame." },
+        { title: "Arrival", field: "arrival_pattern", width: 88,
+          editor: "list",
+          editorParams: { values: { periodic: "periodic", uniform: "sporadic" } },
+          formatter: (cell) => cell.getValue() === "uniform"
+            ? '<span class="cell-manual">sporadic</span>'
+            : '<span class="cell-auto">periodic</span>',
+          tooltip: "periodic = one frame every BAG. sporadic = the gap is redrawn at random " +
+                   "from the Min..Max range for every frame." },
+        { title: "Min (ms)", field: "arrival_min_ms", editor: "number", width: 86,
+          formatter: (cell) => sporadicOnly(cell),
+          tooltip: "Sporadic only: shortest possible gap. Below BAG is allowed but the " +
+                   "regulator will hold frames back, adding latency." },
+        { title: "Max (ms)", field: "arrival_max_ms", editor: "number", width: 86,
+          formatter: (cell) => sporadicOnly(cell),
+          tooltip: "Sporadic only: longest possible gap. Keep the average above BAG." },
         { title: "rho (Mbps)", field: "rho_bps", editor: "number", width: 96,
           formatter: derivedFormatter("rho_bps", 3, 1e6),
           tooltip: "Sustained rate. Blank = computed as Lmax/BAG.",
@@ -110,10 +146,23 @@ window.VLTable = (function () {
 
     table.on("cellEdited", (cell) => {
       const row = cell.getRow().getData();
-      writeBack(row);
+
+      // Switching to sporadic: seed the bounds from the CURRENT BAG rather than whatever was
+      // last shown, so the defaults are always min = BAG, max = 2 x BAG and safe by construction.
+      if (cell.getField() === "arrival_pattern" && row.arrival_pattern === "uniform") {
+        cell.getRow().update({
+          arrival_min_ms: Number(row.bag_ms),
+          arrival_max_ms: Number(row.bag_ms) * 2,
+        });
+      }
+
+      writeBack(cell.getRow().getData());
       Store.touch();
-      // rho/sigma follow from bytes/BAG, so redraw to refresh the derived columns.
-      table.redraw();
+      // Several columns are rendered from OTHER columns -- rho/sigma from bytes and BAG, the
+      // arrival bounds from the pattern and BAG. Tabulator does not know about those
+      // dependencies and reuses cached cells on a plain redraw(), which leaves stale values on
+      // screen. `true` forces a full re-render, which is what keeps the derived columns honest.
+      table.redraw(true);
     });
 
     document.getElementById("btn-add-vl").onclick = addVL;
@@ -157,6 +206,16 @@ window.VLTable = (function () {
     const vl = project.virtual_links.find(item => item.id === row.id);
     if (!vl) return;
 
+    vl.arrival_pattern = row.arrival_pattern === "uniform" ? "uniform" : "periodic";
+    if (vl.arrival_pattern === "uniform") {
+      vl.arrival_min_s = (Number(row.arrival_min_ms) || 0) / 1000 || null;
+      vl.arrival_max_s = (Number(row.arrival_max_ms) || 0) / 1000 || null;
+    } else {
+      // Keep the model clean: bounds that are not in effect are not stored.
+      vl.arrival_min_s = null;
+      vl.arrival_max_s = null;
+    }
+
     vl.hex_vl_id = String(row.hex_vl_id || "").trim();
     vl.label = row.label || "";
     vl.frame_bytes = Number(row.frame_bytes) || 1;
@@ -179,6 +238,11 @@ window.VLTable = (function () {
       destination_node_ids: vl.destination_node_ids,
       bag_ms: vl.bag_s * 1000,
       offset_us: vl.offset_s == null ? "" : vl.offset_s * 1e6,
+      arrival_pattern: vl.arrival_pattern || "periodic",
+      // Mirror the backend's defaults (min = BAG, max = 2 x BAG) so the table shows what would
+      // actually be generated rather than blanks.
+      arrival_min_ms: (vl.arrival_min_s != null ? vl.arrival_min_s : vl.bag_s) * 1000,
+      arrival_max_ms: (vl.arrival_max_s != null ? vl.arrival_max_s : vl.bag_s * 2) * 1000,
       rho_bps: vl.rho_bps,
       sigma_bits: vl.sigma_bits,
       frame_header_length_override: vl.frame_header_length_override,
@@ -206,6 +270,9 @@ window.VLTable = (function () {
       destination_node_ids: [endSystems[1].id],
       bag_s: 0.002,
       offset_s: 0,
+      arrival_pattern: "periodic",
+      arrival_min_s: null,
+      arrival_max_s: null,
       rho_bps: null,
       sigma_bits: null,
       explicit_path_edge_ids: null,

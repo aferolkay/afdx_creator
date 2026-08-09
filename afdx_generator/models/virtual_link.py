@@ -2,7 +2,23 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
+
+# How the source spaces successive frames.
+#
+#   periodic - one frame exactly every BAG. The classic AFDX assumption.
+#   uniform  - the gap is drawn uniformly at random from [min, max] for every frame, which is
+#              what the literature calls a *sporadic* source.
+#
+# This works because the library's Source_ext re-reads `interArrivalTime` before scheduling each
+# frame, and the parameter is declared `volatile` in NED -- so a random expression is redrawn every
+# time rather than fixed at startup.
+#
+# Note: the library also declares `deltaInterArrivalTimeMaxLimit`, which looks like it is for this.
+# It is not implemented -- no C++ file reads it -- so setting it does nothing. Do not use it.
+ArrivalPattern = Literal["periodic", "uniform"]
 
 
 class VirtualLink(BaseModel):
@@ -27,6 +43,30 @@ class VirtualLink(BaseModel):
 
     # Source_ext.startTime. None -> omit, letting the library default it to interArrivalTime.
     offset_s: float | None = Field(default=None, ge=0)
+
+    # How the source spaces frames. "periodic" reproduces the previous behaviour exactly.
+    arrival_pattern: ArrivalPattern = "periodic"
+    # Bounds for the "uniform" pattern. None -> derived from BAG (see effective_arrival_bounds).
+    arrival_min_s: float | None = Field(default=None, gt=0)
+    arrival_max_s: float | None = Field(default=None, gt=0)
+
+    def effective_arrival_bounds(self) -> tuple[float, float]:
+        """The [min, max] actually used for a uniform source.
+
+        Defaults are chosen to be safe rather than merely plausible: min = BAG (never faster than
+        the link is allowed to emit) and max = 2 x BAG, giving a mean of 1.5 x BAG, comfortably
+        under the rate at which the BAG regulator's queue would grow without bound.
+        """
+        low = self.arrival_min_s if self.arrival_min_s is not None else self.bag_s
+        high = self.arrival_max_s if self.arrival_max_s is not None else self.bag_s * 2
+        return low, high
+
+    @property
+    def mean_interarrival_s(self) -> float:
+        if self.arrival_pattern == "uniform":
+            low, high = self.effective_arrival_bounds()
+            return (low + high) / 2
+        return self.bag_s
 
     # Token-bucket policing. None -> auto-suggested by trafficmath.rho_sigma at generation time.
     rho_bps: float | None = Field(default=None, gt=0)
@@ -66,3 +106,11 @@ class VirtualLink(BaseModel):
     def route_table_key(self) -> str:
         """The exact token written as the key in a switch route-table file."""
         return f"0x{self.numeric_id:X}"
+
+    @field_validator("arrival_max_s")
+    @classmethod
+    def _max_above_min(cls, v, info):
+        low = info.data.get("arrival_min_s")
+        if v is not None and low is not None and v < low:
+            raise ValueError("arrival max must not be smaller than arrival min")
+        return v

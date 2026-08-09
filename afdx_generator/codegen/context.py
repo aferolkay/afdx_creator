@@ -52,6 +52,11 @@ class VLPlan:
     frame_header_bytes: int
     rho_was_auto: bool
     sigma_was_auto: bool
+    arrival_pattern: str = "periodic"
+    # Right-hand side written for Source_ext.interArrivalTime -- either a fixed time or a random
+    # expression the simulator redraws for every frame.
+    arrival_expression: str = ""
+    arrival_description: str = ""
     paths: list[Path] = field(default_factory=list)
 
     @property
@@ -148,6 +153,47 @@ def assemble(project: Project, profile: LibraryProfile = DEFAULT_PROFILE) -> Ren
                 f"own sustained rate ({auto.rho_bps/1e6:.3f} Mbps); the policer will drop frames."
             )
 
+        # --- arrival pattern -----------------------------------------------------------------
+        # Sporadic sources rely on the library re-reading a `volatile` NED parameter before every
+        # frame, so a random expression is redrawn each time rather than fixed at startup.
+        from .render import format_time  # local import: render imports this module
+
+        name = vl.label or vl.hex_vl_id
+        if vl.arrival_pattern == "uniform":
+            low, high = vl.effective_arrival_bounds()
+            arrival_expression = f"uniform({format_time(low)}, {format_time(high)})"
+            arrival_description = (
+                f"sporadic, gap drawn uniformly from {format_time(low)}..{format_time(high)} "
+                f"(mean {format_time((low + high) / 2)})"
+            )
+
+            if high < low:
+                raise GenerationError(
+                    [f"VL {name}: arrival max ({format_time(high)}) is below arrival min "
+                     f"({format_time(low)})."]
+                )
+            # The BAG regulator releases at most one frame per BAG. If the source *averages*
+            # faster than that, its queue grows without bound and the run aborts partway through
+            # with "Max limit for VLID queue is reached" -- confirmed by running it.
+            mean = (low + high) / 2
+            if mean <= vl.bag_s:
+                warnings.append(
+                    f"VL {name}: mean arrival gap ({format_time(mean)}) is not above BAG "
+                    f"({format_time(vl.bag_s)}), so frames are generated faster than the BAG "
+                    f"regulator can release them. Its queue will grow until the simulation "
+                    f"aborts. Raise the arrival bounds."
+                )
+            elif low < vl.bag_s:
+                # Legal and often intended, but it is where latency tails come from.
+                warnings.append(
+                    f"VL {name}: arrival min ({format_time(low)}) is below BAG "
+                    f"({format_time(vl.bag_s)}). Bursts will be held back by the BAG regulator, "
+                    f"so expect end-to-end latency well above the periodic case."
+                )
+        else:
+            arrival_expression = format_time(vl.bag_s)
+            arrival_description = "periodic, one frame every BAG"
+
         source_node = graph.node(vl.source_node_id)
         vl_plans.append(
             VLPlan(
@@ -167,6 +213,9 @@ def assemble(project: Project, profile: LibraryProfile = DEFAULT_PROFILE) -> Ren
                 payload_bytes=vl.frame_bytes,
                 bag_s=vl.bag_s,
                 offset_s=vl.offset_s,
+                arrival_pattern=vl.arrival_pattern,
+                arrival_expression=arrival_expression,
+                arrival_description=arrival_description,
                 rho_bps=rho,
                 sigma_bits=sigma,
                 lmax_bits=auto.lmax_bits,
