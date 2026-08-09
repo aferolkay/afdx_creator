@@ -61,7 +61,7 @@ what you did and asks the backend. That is why the whole pipeline can be tested 
 
 ```mermaid
 flowchart TB
-    You([You, in a browser])
+    You(["You, in a browser"])
 
     subgraph FE["FRONTEND — JavaScript, static/js/"]
         GE["graph_editor.js<br/>the diagram"]
@@ -80,7 +80,7 @@ flowchart TB
 
     DISK[("projects/*.json<br/>your saved networks")]
     OUT[("output/&lt;name&gt;/<br/>.ned .ini S1.txt ...")]
-    SIM([OMNeT++ simulator])
+    SIM(["OMNeT++ simulator"])
 
     You --> GE & VT & SP
     GE & VT & SP --> ST

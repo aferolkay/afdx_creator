@@ -135,13 +135,6 @@
       "label": "S5",
       "x": 432.69127779713756,
       "y": 673.2051901990471
-    },
-    {
-      "id": "es15",
-      "kind": "end_system",
-      "label": "E14",
-      "x": 244.56843684084276,
-      "y": 587.0155477414681
     }
   ],
   "edges": [
@@ -277,12 +270,13 @@
       "id": "vl1",
       "hex_vl_id": "0x1",
       "label": "V1",
-      "frame_bytes": 53,
+      "frame_bytes": 28,
       "source_node_id": "es1",
       "destination_node_ids": [
-        "es2"
+        "es2",
+        "es10"
       ],
-      "bag_s": 0.002,
+      "bag_s": 0.032,
       "offset_s": 0.0,
       "rho_bps": null,
       "sigma_bits": null,
@@ -406,5 +400,5 @@
     "validation_sim_time_limit_s": 1.0
   },
   "created_at": "2026-08-09T10:09:44.900279Z",
-  "updated_at": "2026-08-09T10:25:45.154793Z"
+  "updated_at": "2026-08-09T10:31:49.544091Z"
 }
