@@ -983,11 +983,11 @@
   ],
   "general_settings": {
     "sigma_margin_factor": 4.0,
-    "frame_header_length_bytes": 47,
+    "frame_header_length_bytes": 55,
     "phy_overhead_bits": 160,
-    "switch_fabric_delay_s": 0.00005,
-    "latency_tech_tx_delay_s": 0.00005,
-    "latency_tech_rx_delay_s": 0.00005,
+    "switch_fabric_delay_s": 0.00014,
+    "latency_tech_tx_delay_s": 0.00004,
+    "latency_tech_rx_delay_s": 0.00004,
     "regulator_max_vlid_queue_size": 1000,
     "scheduler_service_time_s": 0.0,
     "skew_max_s": 0.01,
@@ -1005,5 +1005,5 @@
     "validation_sim_time_limit_s": 1.0
   },
   "created_at": "2026-08-09T10:09:44.900279Z",
-  "updated_at": "2026-08-09T19:47:09.583500Z"
+  "updated_at": "2026-08-09T20:23:59.117493Z"
 }

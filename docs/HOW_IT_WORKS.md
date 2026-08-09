@@ -323,13 +323,19 @@ smallest value that ran clean on that network. **It is a property of that topolo
 constant.** A busier network may need more. If validation reports dropped frames, raise it in
 Settings.
 
-### The technological delays (50 µs)
+### The technological delays
 
-`switchFabric.delay`, `latencyTechTx`, `latencyTechRx` default to 50 µs each. These are
-conventional values **not calibrated against any published AFDX delay model**. Simulated end-to-end
-latency is quite sensitive to them, so treat absolute latency numbers as provisional until you have
-checked these against your own reference. They are marked with a warning in the Settings panel for
-this reason.
+`switchFabric.delay`, `latencyTechTx`, `latencyTechRx` are the fixed per-hop costs, and simulated
+end-to-end latency is quite sensitive to them.
+
+The built-in defaults (50 µs each) are conventional placeholders, **not** derived from any
+published model — they came from an existing example project. If you are comparing against
+published figures, set them to whatever that source assumes and say so in your write-up.
+
+For reference, the realistic-avionics-network literature uses **40 µs per end system** and
+**140 µs per switch**, with a frame of payload **+ 55 bytes** (47 B AFDX header + 8 B preamble and
+start-of-frame delimiter). Using those values, this tool's output lands inside the published
+worst-case bounds for all 30 links — see `validation_vs_published.md`.
 
 ---
 

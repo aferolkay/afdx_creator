@@ -66,9 +66,11 @@ sharing a port perturbs a link's spacing along the way, so a one-frame allowance
 the smallest margin that ran clean there — it is a property of that topology, not a universal
 constant. If validation reports dropped frames, raise it.
 
-**Technological latencies (default 50 µs).** Conventional values, *not* calibrated against a
-published AFDX delay model. Simulated end-to-end latency is sensitive to them, so treat absolute
-latency figures as provisional until you have checked them against your own reference.
+**Technological latencies (default 50 µs).** The defaults are conventional placeholders, *not*
+derived from any published model, and simulated latency is sensitive to them — so set them to
+whatever your reference assumes before quoting absolute figures. For the realistic-avionics
+literature that means 40 µs per end system and 140 µs per switch; with those, this tool's output
+lands inside the published bounds (see below).
 
 ## When the AFDX library changes
 
@@ -92,7 +94,7 @@ afdx_generator/
   validation/      build the command, run it, interpret the output
   api/             REST endpoints
 static/            frontend; vendored libraries, no build step
-tests/             55 tests, no OMNeT++ required
+tests/             72 tests, no OMNeT++ required
 ```
 
 The pipeline is a chain of pure functions — validate → resolve routes → number ports → size traffic
@@ -113,6 +115,13 @@ traffic parameters, the pipeline is correct.
 Verified end to end against the real toolchain: the reference network was rebuilt through the API,
 generated, and run — zero dropped frames, zero errors. A deliberately bad configuration
 (`sigma` margin 1.0) was also run, and validation correctly caught it.
+
+## Does it produce a faithful model?
+
+The `realisticNetwork` project reproduces a published 30-link avionics message set. Using that
+source's own constants, **28 of its 30 links land inside the published worst-case delay bounds**
+(0.69–1.02× of them); the two that don't are sporadic links the published analysis explicitly does
+not cover. See [docs/validation_vs_published.md](docs/validation_vs_published.md).
 
 ## Known limits
 
