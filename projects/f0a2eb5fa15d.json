@@ -278,9 +278,9 @@
       ],
       "bag_s": 0.032,
       "offset_s": 0.0,
-      "arrival_pattern": "uniform",
-      "arrival_min_s": 0.0005,
-      "arrival_max_s": 0.0015,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
       "rho_bps": null,
       "sigma_bits": null,
       "sigma_margin_factor_override": null,
@@ -392,6 +392,27 @@
       "explicit_path_edge_ids": null,
       "partition_id": null,
       "frame_header_length_override": null
+    },
+    {
+      "id": "vl7",
+      "hex_vl_id": "0x7",
+      "label": "V7",
+      "frame_bytes": 256,
+      "source_node_id": "es1",
+      "destination_node_ids": [
+        "es2"
+      ],
+      "bag_s": 0.002,
+      "offset_s": 0.0,
+      "arrival_pattern": "periodic",
+      "arrival_min_s": null,
+      "arrival_max_s": null,
+      "rho_bps": null,
+      "sigma_bits": null,
+      "sigma_margin_factor_override": null,
+      "explicit_path_edge_ids": null,
+      "partition_id": null,
+      "frame_header_length_override": null
     }
   ],
   "general_settings": {
@@ -418,5 +439,5 @@
     "validation_sim_time_limit_s": 1.0
   },
   "created_at": "2026-08-09T10:09:44.900279Z",
-  "updated_at": "2026-08-09T11:17:32.171859Z"
+  "updated_at": "2026-08-09T11:33:20.507202Z"
 }

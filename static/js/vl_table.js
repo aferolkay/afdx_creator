@@ -91,15 +91,15 @@ window.VLTable = (function () {
       selectableRows: true,
       placeholder: "No virtual links yet. Add one to describe a traffic stream.",
       columns: [
-        { title: "VL id", field: "hex_vl_id", editor: "input", width: 78,
+        { title: "VL id", field: "hex_vl_id", editor: "input", width: 62,
           tooltip: "Hex identifier, e.g. 0x1. Must be unique." },
-        { title: "Name", field: "label", editor: "input", width: 80 },
-        { title: "Bytes", field: "frame_bytes", editor: "number", width: 74,
+        { title: "Name", field: "label", editor: "input", width: 60 },
+        { title: "Bytes", field: "frame_bytes", editor: "number", width: 62,
           editorParams: { min: 1 }, tooltip: "Application payload size." },
-        { title: "From", field: "source_node_id", width: 88,
+        { title: "From", field: "source_node_id", width: 66,
           editor: "list", editorParams: { valuesLookup: nodeOptions },
           formatter: (cell) => nodeOptions()[cell.getValue()] || "-" },
-        { title: "To", field: "destination_node_ids", width: 130,
+        { title: "To", field: "destination_node_ids", width: 96,
           tooltip: "Destination end systems. Several = multicast.",
           formatter: (cell) => {
             const options = nodeOptions();
@@ -108,14 +108,14 @@ window.VLTable = (function () {
           },
           cellClick: (event, cell) => editDestinations(cell),
         },
-        { title: "BAG (ms)", field: "bag_ms", editor: "number", width: 88,
+        { title: "BAG (ms)", field: "bag_ms", editor: "number", width: 74,
           editorParams: { min: 0.001, step: 0.5 },
           formatter: (cell) => trim(cell.getValue()),
           tooltip: "Minimum interval between frames." },
-        { title: "Offset (us)", field: "offset_us", editor: "number", width: 92,
+        { title: "Offset (us)", field: "offset_us", editor: "number", width: 78,
           formatter: (cell) => trim(cell.getValue()),
           tooltip: "Release offset of the first frame." },
-        { title: "Arrival", field: "arrival_pattern", width: 88,
+        { title: "Arrival", field: "arrival_pattern", width: 76,
           editor: "list",
           editorParams: { values: { periodic: "periodic", uniform: "sporadic" } },
           formatter: (cell) => cell.getValue() === "uniform"
@@ -123,20 +123,20 @@ window.VLTable = (function () {
             : '<span class="cell-auto">periodic</span>',
           tooltip: "periodic = one frame every BAG. sporadic = the gap is redrawn at random " +
                    "from the Min..Max range for every frame." },
-        { title: "Min (ms)", field: "arrival_min_ms", editor: "number", width: 86,
+        { title: "Min (ms)", field: "arrival_min_ms", editor: "number", width: 74,
           formatter: (cell) => sporadicOnly(cell),
           tooltip: "Sporadic only: shortest possible gap. Below BAG is allowed but the " +
                    "regulator will hold frames back, adding latency." },
-        { title: "Max (ms)", field: "arrival_max_ms", editor: "number", width: 86,
+        { title: "Max (ms)", field: "arrival_max_ms", editor: "number", width: 74,
           formatter: (cell) => sporadicOnly(cell),
           tooltip: "Sporadic only: longest possible gap. Keep the average above BAG." },
-        { title: "rho (Mbps)", field: "rho_bps", editor: "number", width: 96,
+        { title: "rho (Mbps)", field: "rho_bps", editor: "number", width: 84,
           formatter: derivedFormatter("rho_bps", 3, 1e6),
           tooltip: "Sustained rate. Blank = computed as Lmax/BAG.",
           editorParams: { min: 0 },
           mutatorEdit: (value) => (value === "" || value == null) ? null : Number(value) * 1e6,
           accessorEdit: (value) => (value == null) ? "" : Number(value) / 1e6 },
-        { title: "sigma (bits)", field: "sigma_bits", editor: "number", width: 100,
+        { title: "sigma (bits)", field: "sigma_bits", editor: "number", width: 88,
           formatter: derivedFormatter("sigma_bits", 0, 1),
           tooltip: "Burst allowance. Blank = margin x Lmax.",
           editorParams: { min: 0 },
@@ -158,6 +158,8 @@ window.VLTable = (function () {
 
       writeBack(cell.getRow().getData());
       Store.touch();
+      // Turning a link sporadic is what makes the bounds columns relevant.
+      if (cell.getField() === "arrival_pattern") applyColumnVisibility();
       // Several columns are rendered from OTHER columns -- rho/sigma from bytes and BAG, the
       // arrival bounds from the pattern and BAG. Tabulator does not know about those
       // dependencies and reuses cached cells on a plain redraw(), which leaves stale values on
@@ -297,7 +299,41 @@ window.VLTable = (function () {
   function refresh() {
     const project = Store.get();
     if (!table || !project) return;
-    table.setData(project.virtual_links.map(toRow));
+    table.setData(project.virtual_links.map(toRow)).then(applyColumnVisibility);
+  }
+
+  /* The arrival bounds are dashes for every row unless something is sporadic, so they are hidden
+     until they mean something. With 12 columns and a side panel that is only ~700px on a laptop,
+     two columns of dashes are the difference between Arrival being on screen or not. */
+  function applyColumnVisibility() {
+    if (!table) return;
+    const project = Store.get();
+    const anySporadic = (project?.virtual_links || []).some(vl => vl.arrival_pattern === "uniform");
+    ["arrival_min_ms", "arrival_max_ms"].forEach(field => {
+      const column = table.getColumn(field);
+      if (!column) return;
+      if (anySporadic) column.show(); else column.hide();
+    });
+    updateScrollCue();
+  }
+
+  /* Tell the user the table scrolls sideways. Without this the rightmost columns simply look
+     absent -- which is exactly how the Arrival column went missing on a narrower screen. */
+  function updateScrollCue() {
+    const host = document.getElementById("vl-table");
+    const holder = host?.querySelector(".tabulator-tableholder");
+    if (!holder) return;
+    const update = () => {
+      const overflowing = holder.scrollWidth - holder.clientWidth > 2;
+      const atEnd = holder.scrollLeft + holder.clientWidth >= holder.scrollWidth - 2;
+      host.classList.toggle("has-more-columns", overflowing && !atEnd);
+    };
+    if (!holder.dataset.cueBound) {
+      holder.addEventListener("scroll", update);
+      window.addEventListener("resize", update);
+      holder.dataset.cueBound = "1";
+    }
+    update();
   }
 
   return { init, refresh };
