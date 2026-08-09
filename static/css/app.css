@@ -167,15 +167,36 @@ table.route-preview th, table.route-preview td { text-align: left; padding: 5px 
 table.route-preview th { color: var(--muted); font-weight: 600; }
 table.route-preview code { color: var(--accent); }
 
-/* ---------- Tabulator dark theme ---------- */
+/* ---------- Tabulator dark theme ----------
+   Every background here must be OPAQUE. Tabulator's own stylesheet paints the table surface
+   #fff and rows #f3f3f3; a translucent override lets that white bleed through and the light
+   text becomes unreadable. This is exactly what made selected rows wash out. */
 .tabulator { background: transparent; border: none; font-size: 12.5px; }
+.tabulator .tabulator-tableholder,
+.tabulator .tabulator-table { background: var(--panel); color: var(--text); }
 .tabulator .tabulator-header { background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text); }
 .tabulator .tabulator-header .tabulator-col { background: var(--panel-2); border-right: 1px solid var(--border); }
 .tabulator .tabulator-header .tabulator-col-title { font-weight: 600; font-size: 12px; }
 .tabulator .tabulator-row { background: var(--panel); border-bottom: 1px solid var(--border); color: var(--text); }
 .tabulator .tabulator-row.tabulator-row-even { background: var(--panel-2); }
-.tabulator .tabulator-row.tabulator-selected { background: rgba(77, 163, 255, .18); }
-.tabulator .tabulator-row:hover { background: rgba(77, 163, 255, .09) !important; }
+
+/* Selected: opaque deep blue, ~7:1 contrast against the light text, plus a bright left edge so
+   the selection is obvious even to someone who cannot separate the two blues. */
+.tabulator .tabulator-row.tabulator-selected,
+.tabulator .tabulator-row.tabulator-row-even.tabulator-selected {
+  background: #1f4470 !important;
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
+.tabulator .tabulator-row.tabulator-selected .tabulator-cell { color: #ffffff; }
+/* Auto-computed values stay visually distinct on the selected row without going dim. */
+.tabulator .tabulator-row.tabulator-selected .cell-auto { color: #b9d4f2; }
+.tabulator .tabulator-row.tabulator-selected .cell-manual { color: #8fd0ff; }
+
+.tabulator .tabulator-row:hover { background: #23334a !important; }
+.tabulator .tabulator-row.tabulator-selected:hover,
+.tabulator .tabulator-row.tabulator-row-even.tabulator-selected:hover {
+  background: #275388 !important;
+}
 .tabulator .tabulator-cell { border-right: 1px solid var(--border); padding: 6px 8px; }
 .tabulator .tabulator-cell.tabulator-editing input,
 .tabulator .tabulator-cell.tabulator-editing select { background: #0d1119; color: var(--text); border: 1px solid var(--accent); }
