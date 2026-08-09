@@ -47,9 +47,14 @@ window.VLTable = (function () {
      Returns [low, high] with high === null when a single value was given. */
   function parseRange(text) {
     if (text == null) return null;
-    const cleaned = String(text).replace(/[()\s]/g, "");
+    const cleaned = String(text)
+      .replace(/[()\s]/g, "")
+      // Normalise every dash-like character to a plain hyphen FIRST. formatRange writes an en
+      // dash, so without this the parser cannot read back its own output and every range renders
+      // as "?" the moment it is redrawn.
+      .replace(/[\u2010-\u2015\u2212]/g, "-");   // en/em dash, minus sign -> plain hyphen
     if (!cleaned) return null;
-    const parts = cleaned.split(/[-,]/).filter(s => s !== "");
+    const parts = cleaned.split(/[-,;]/).filter(s => s !== "");
     const numbers = parts.map(Number);
     if (!numbers.length || numbers.some(n => !isFinite(n) || n <= 0)) return null;
     if (numbers.length === 1) return [numbers[0], null];
