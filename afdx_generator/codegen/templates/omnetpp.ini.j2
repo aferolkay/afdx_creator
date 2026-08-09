@@ -93,9 +93,10 @@ network = {{ network_fqn }}
 # ---- {{ vl.label }} ({{ vl.route_key }}): {{ vl.source_label }} -> {{ vl.destination_labels | join(", ") }}
 #      route: {{ vl.path_description }}
 #      arrival: {{ vl.arrival_description }}
+#      frames : {{ vl.frame_size_description }}
 #      Lmax = {{ vl.lmax_bits }} bits{% if not vl.rho_was_auto %} | rho set manually{% endif %}{% if not vl.sigma_was_auto %} | sigma set manually{% endif %}
 
-{{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.packet_length }} = {{ vl.payload_bytes }}
+{{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.packet_length }} = {{ vl.packet_length_expression }}
 {{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.inter_arrival_time }} = {{ vl.arrival_expression }}
 {% if vl.offset_s is not none %}
 {{ net }}.{{ vl.source_ref }}.{{ profile.submodules.message_source_vector }}[{{ vl.stream_index }}].{{ profile.source.start_time }} = {{ fmt_time(vl.offset_s) }}

@@ -53,10 +53,12 @@ class VLPlan:
     rho_was_auto: bool
     sigma_was_auto: bool
     arrival_pattern: str = "periodic"
-    # Right-hand side written for Source_ext.interArrivalTime -- either a fixed time or a random
-    # expression the simulator redraws for every frame.
+    # Right-hand sides written for Source_ext. Either fixed values or random expressions the
+    # simulator redraws for every frame.
     arrival_expression: str = ""
     arrival_description: str = ""
+    packet_length_expression: str = ""
+    frame_size_description: str = ""
     paths: list[Path] = field(default_factory=list)
 
     @property
@@ -131,8 +133,10 @@ def assemble(project: Project, profile: LibraryProfile = DEFAULT_PROFILE) -> Ren
             else settings.frame_header_length_bytes
         )
         margin = vl.sigma_margin_factor_override or settings.sigma_margin_factor
+        # Sized from the LARGEST frame the link can emit. The policer checks each frame as it
+        # arrives, so a bucket sized for a typical frame silently discards the big ones.
         auto = suggest(
-            payload_bytes=vl.frame_bytes,
+            payload_bytes=vl.max_frame_bytes,
             bag_s=vl.bag_s,
             frame_header_bytes=header,
             phy_overhead_bits=settings.phy_overhead_bits,
@@ -191,8 +195,31 @@ def assemble(project: Project, profile: LibraryProfile = DEFAULT_PROFILE) -> Ren
                     f"so expect end-to-end latency well above the periodic case."
                 )
         else:
-            arrival_expression = format_time(vl.bag_s)
-            arrival_description = "periodic, one frame every BAG"
+            period = vl.effective_period_s
+            arrival_expression = format_time(period)
+            arrival_description = (
+                "periodic, one frame every BAG"
+                if vl.period_s is None or period == vl.bag_s
+                else f"periodic every {format_time(period)} (slower than its {format_time(vl.bag_s)} BAG)"
+            )
+            if period < vl.bag_s:
+                warnings.append(
+                    f"VL {name}: period ({format_time(period)}) is shorter than BAG "
+                    f"({format_time(vl.bag_s)}), so frames are offered faster than the regulator "
+                    f"can release them. Its queue will grow until the simulation aborts."
+                )
+
+        # --- frame size ------------------------------------------------------------------------
+        if vl.has_variable_frame_size:
+            # intuniform is inclusive at both ends, matching a payload range like (683, 1183).
+            packet_length_expression = f"intuniform({vl.frame_bytes}, {vl.frame_bytes_max})"
+            frame_size_description = (
+                f"payload varies uniformly over {vl.frame_bytes}..{vl.frame_bytes_max} bytes; "
+                f"rho/sigma sized for the largest"
+            )
+        else:
+            packet_length_expression = str(vl.frame_bytes)
+            frame_size_description = f"{vl.frame_bytes} byte payload"
 
         source_node = graph.node(vl.source_node_id)
         vl_plans.append(
@@ -216,6 +243,8 @@ def assemble(project: Project, profile: LibraryProfile = DEFAULT_PROFILE) -> Ren
                 arrival_pattern=vl.arrival_pattern,
                 arrival_expression=arrival_expression,
                 arrival_description=arrival_description,
+                packet_length_expression=packet_length_expression,
+                frame_size_description=frame_size_description,
                 rho_bps=rho,
                 sigma_bits=sigma,
                 lmax_bits=auto.lmax_bits,

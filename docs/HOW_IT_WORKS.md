@@ -333,49 +333,54 @@ this reason.
 
 ---
 
-## 7b. Periodic and sporadic sources
+## 7b. How often a link sends, and how big its frames are
 
-Each virtual link has an **Arrival** column with two choices.
+Two columns describe the traffic a link offers. Both accept a **single value or a range**, and
+both understand the notation message-set tables are usually printed in — you can type
+`(683, 1183)` or `683-1183` interchangeably.
 
-**periodic** (default) — one frame every BAG. The classic AFDX assumption, and what every project
-did before this field existed.
+### Gap (ms) — how often a frame is offered
 
-**sporadic** — the gap between frames is drawn **uniformly at random** from a Min…Max range, redrawn
-for every frame. This is the "time between two consecutive frames changes uniformly and randomly"
-model. It generates:
+| What you type | Meaning |
+|---|---|
+| nothing | periodic, one frame every BAG (the usual case) |
+| `40` | periodic every 40 ms — which may be **slower** than the BAG allows |
+| `2-5` or `(2, 5)` | **sporadic**: the gap is redrawn uniformly from that range for every frame |
 
-```ini
-...messageSource[0].interArrivalTime = uniform(2ms, 6ms)
-```
+The Arrival column follows what you type, and typing in either keeps the other honest.
 
-This works with no change to the AFDX library, because the library's source re-reads
-`interArrivalTime` before scheduling each frame and the parameter is `volatile` in NED — meaning
-OMNeT++ re-evaluates the expression every time instead of fixing it at startup.
+**BAG and the gap are different things.** BAG is the minimum spacing the network *permits* and
+polices; the gap is how often the application *actually offers* a frame. A link may legitimately
+send slower than its BAG — in a real avionics message set, six of thirty links do exactly that
+(BAG 32 ms but sending every 40 ms). Tying the two together would overstate that link's traffic.
 
-**BAG is unaffected.** The Arrival column changes how often the application *offers* a frame; BAG
-still governs how often the link is *allowed* to emit one. `rho`/`sigma` are likewise unchanged,
-because the regulator still releases at most one frame per BAG.
+Sporadic generation needs no change to the AFDX library: the library re-reads its inter-arrival
+parameter before scheduling each frame and the parameter is `volatile` in NED, so OMNeT++
+re-evaluates a random expression every time rather than fixing it at startup.
 
-### The two ways to get this wrong
+### Bytes — payload size
 
-Switching to sporadic defaults the bounds to **Min = BAG, Max = 2 × BAG**, which is safe. If you
-change them, two thresholds matter, and the table colours the cells to warn you:
+| What you type | Meaning |
+|---|---|
+| `256` | every frame is 256 bytes |
+| `683-1183` or `(683, 1183)` | the size is redrawn uniformly per frame |
+
+**`rho`/`sigma` are always sized from the largest frame in the range.** The policer inspects each
+frame individually, so a bucket sized for a typical frame silently discards the big ones — that
+was measured at 184 dropped frames before this was handled.
+
+### The two ways to get the gap wrong
+
+The table colours the cell, and generation warns with the numbers:
 
 | Situation | Shown as | What happens |
 |---|---|---|
-| Min below BAG | orange | Legal. Bursts get held back by the regulator, so expect latency well above the periodic case |
-| **Mean at or below BAG** | **red** | The source outruns what BAG permits. The regulator's queue grows without bound and **the run aborts partway through** with `Max limit for VLID queue is reached` |
+| The range dips below BAG | orange | Legal. Bursts get held back by the regulator, so expect latency well above the periodic case |
+| **The average is at or below BAG** | **red** | The source outruns what BAG permits. The regulator's queue grows without bound and **the run aborts partway through** |
 
-Generation also warns about both in the Output panel. Measured on a 2 ms BAG link: `uniform(2ms,
-6ms)` gave a flat 199.9 µs end-to-end latency, while `uniform(0.5ms, 7.5ms)` — the *same* 4 ms mean,
-but dipping below BAG — ranged from 199.9 µs up to **3301.7 µs**.
-
-### Varying the frame size too
-
-The frame-size field is also `volatile`, so `intuniform(100, 1000)` works if you hand-edit the
-generated `.ini`. There is no column for it, and one caveat matters: **size `rho`/`sigma` from the
-largest frame the distribution can produce.** Sizing them for a nominal 256-byte frame while
-emitting up to 1000 bytes produced 184 dropped frames in a test.
+Switching to sporadic seeds the range to BAG…2×BAG, which is safe by construction. Measured on a
+2 ms BAG link: `uniform(2ms, 6ms)` gave a flat 199.9 µs end-to-end latency, while
+`uniform(0.5ms, 7.5ms)` — the *same* 4 ms mean but dipping below BAG — ranged up to **3301.7 µs**.
 
 ---
 

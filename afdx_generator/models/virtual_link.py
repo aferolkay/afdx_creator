@@ -30,7 +30,12 @@ class VirtualLink(BaseModel):
 
     # Application payload length -> Source_ext.packetLength. The wire frame is this plus
     # frame_header_length (see trafficmath.rho_sigma.wire_frame_bits).
+    #
+    # A fixed size uses frame_bytes alone. Setting frame_bytes_max makes the size vary uniformly
+    # across [frame_bytes, frame_bytes_max], redrawn per frame -- message sets often specify a
+    # payload range like (683, 1183) rather than one number.
     frame_bytes: int = Field(gt=0)
+    frame_bytes_max: int | None = Field(default=None, gt=0)
 
     source_node_id: str
     # Multicast from day one: AFDX VLs are natively one-to-many, and the library's route-table
@@ -46,9 +51,34 @@ class VirtualLink(BaseModel):
 
     # How the source spaces frames. "periodic" reproduces the previous behaviour exactly.
     arrival_pattern: ArrivalPattern = "periodic"
+
+    # How often a PERIODIC source actually offers a frame. None means "every BAG", which is the
+    # usual case -- but a link may deliberately send slower than its BAG permits (a 40ms period on
+    # a 32ms BAG, say), and tying the two together would silently overstate its traffic.
+    period_s: float | None = Field(default=None, gt=0)
+
     # Bounds for the "uniform" pattern. None -> derived from BAG (see effective_arrival_bounds).
     arrival_min_s: float | None = Field(default=None, gt=0)
     arrival_max_s: float | None = Field(default=None, gt=0)
+
+    @property
+    def effective_period_s(self) -> float:
+        """The gap a periodic source actually uses."""
+        return self.period_s if self.period_s is not None else self.bag_s
+
+    @property
+    def max_frame_bytes(self) -> int:
+        """The largest payload this link can emit.
+
+        Everything about policing must be sized from this, not the nominal size: the token bucket
+        is checked against each frame as it arrives, so a bucket sized for an average frame drops
+        the big ones.
+        """
+        return self.frame_bytes_max if self.frame_bytes_max is not None else self.frame_bytes
+
+    @property
+    def has_variable_frame_size(self) -> bool:
+        return self.frame_bytes_max is not None and self.frame_bytes_max != self.frame_bytes
 
     def effective_arrival_bounds(self) -> tuple[float, float]:
         """The [min, max] actually used for a uniform source.
@@ -63,10 +93,11 @@ class VirtualLink(BaseModel):
 
     @property
     def mean_interarrival_s(self) -> float:
+        """Average gap between offered frames -- the number that must stay above BAG."""
         if self.arrival_pattern == "uniform":
             low, high = self.effective_arrival_bounds()
             return (low + high) / 2
-        return self.bag_s
+        return self.effective_period_s
 
     # Token-bucket policing. None -> auto-suggested by trafficmath.rho_sigma at generation time.
     rho_bps: float | None = Field(default=None, gt=0)
@@ -113,4 +144,12 @@ class VirtualLink(BaseModel):
         low = info.data.get("arrival_min_s")
         if v is not None and low is not None and v < low:
             raise ValueError("arrival max must not be smaller than arrival min")
+        return v
+
+    @field_validator("frame_bytes_max")
+    @classmethod
+    def _frame_max_above_min(cls, v, info):
+        low = info.data.get("frame_bytes")
+        if v is not None and low is not None and v < low:
+            raise ValueError("largest frame size must not be smaller than the smallest")
         return v
