@@ -38,6 +38,17 @@ window.Store = (function () {
     updateUndoButton();
   }
 
+  /* Drop the current project without saving it. Used when it no longer exists on the backend,
+     so that no pending save (or unload flush) writes it back. */
+  function forget() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    project = null;
+    snapshot = null;
+    undoStack = [];
+    dirty = false;
+    updateUndoButton();
+  }
+
   /* --- undo ------------------------------------------------------------------------------ */
   function canUndo() { return undoStack.length > 0; }
 
@@ -182,7 +193,7 @@ window.Store = (function () {
     return prefix + n;
   }
 
-  return { get, set, touch, save, undo, canUndo, updateUndoButton, refreshSaveIndicator,
+  return { get, set, forget, touch, save, undo, canUndo, updateUndoButton, refreshSaveIndicator,
            onChange, nextId, showProblems, refreshProblems,
            setConstants, getConstants, escapeHtml };
 })();

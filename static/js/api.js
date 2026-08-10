@@ -36,7 +36,13 @@ window.API = (function () {
     createProject: (name) => request("POST", "/api/projects", { name }),
     getProject: (id) => request("GET", `/api/projects/${id}`),
     saveProject: (id, data) => request("PUT", `/api/projects/${id}`, data),
-    deleteProject: (id) => request("DELETE", `/api/projects/${id}`),
+    deleteProject: async (id) => {
+      const result = await request("DELETE", `/api/projects/${id}`);
+      // Stop the store holding a deleted project. Otherwise the unload flush faithfully saves
+      // it back and the project reappears the moment you close the tab.
+      if (window.Store && Store.get() && Store.get().id === id) Store.forget();
+      return result;
+    },
     getProblems: (id) => request("GET", `/api/projects/${id}/problems`),
     generate: (id) => request("POST", `/api/projects/${id}/generate`),
     validate: (id) => request("POST", `/api/projects/${id}/validate`),

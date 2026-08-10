@@ -135,13 +135,6 @@
       "label": "S5",
       "x": 432.69127779713756,
       "y": 673.2051901990471
-    },
-    {
-      "id": "es15",
-      "kind": "end_system",
-      "label": "E14",
-      "x": 149.43845779982775,
-      "y": 624.8301458567814
     }
   ],
   "edges": [
@@ -993,8 +986,8 @@
     "frame_header_length_bytes": 55,
     "phy_overhead_bits": 160,
     "switch_fabric_delay_s": 0.00014,
-    "latency_tech_tx_delay_s": 0.00004,
-    "latency_tech_rx_delay_s": 0.00004,
+    "latency_tech_tx_delay_s": 4e-05,
+    "latency_tech_rx_delay_s": 4e-05,
     "regulator_max_vlid_queue_size": 1000,
     "scheduler_service_time_s": 0.0,
     "skew_max_s": 0.01,
