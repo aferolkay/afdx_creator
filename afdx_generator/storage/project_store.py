@@ -27,8 +27,46 @@ def _project_file(project_id: str) -> Path:
     return projects_dir() / f"{safe}.json"
 
 
-def new_project_id() -> str:
+# Long enough to stay descriptive, short enough to keep filenames manageable.
+_MAX_ID_LENGTH = 60
+
+
+def new_project_id(name: str = "") -> str:
+    """Pick an id for a new project, derived from its name where possible.
+
+    The id IS the filename (see `_project_file`), so deriving it from the name means
+    `projects/realisticNetwork.json` rather than `projects/f0a2eb5fa15d.json`. Ids still have to
+    be unique, so a name already in use gets a numeric suffix.
+
+    Falls back to a random id when the name has nothing usable in it (e.g. "***"), because an
+    unreadable id is much better than a collision or an empty filename.
+    """
+    from ..domain.naming import sanitize_path_segment
+
+    base = sanitize_path_segment(name, fallback="")[:_MAX_ID_LENGTH].strip("._-")
+    if not base:
+        return uuid.uuid4().hex[:12]
+
+    taken = _existing_ids()
+    if base.lower() not in taken:
+        return base
+
+    # "project", "project-2", "project-3", ... The bound is a safety net, not a real limit.
+    for suffix in range(2, 1000):
+        candidate = f"{base}-{suffix}"
+        if candidate.lower() not in taken:
+            return candidate
     return uuid.uuid4().hex[:12]
+
+
+def _existing_ids() -> set[str]:
+    """Ids already on disk, lowercased.
+
+    Compared case-insensitively on purpose: Linux would happily keep `Net.json` and `net.json`
+    side by side, but a project file copied to a case-insensitive filesystem (macOS, Windows)
+    would then silently overwrite its twin.
+    """
+    return {p.stem.lower() for p in projects_dir().glob("*.json")}
 
 
 def save_project(project: Project) -> Path:

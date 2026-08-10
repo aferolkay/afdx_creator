@@ -43,7 +43,9 @@ def list_projects():
 
 @router.post("", status_code=201)
 def create_project(request: CreateProjectRequest):
-    project = Project(id=project_store.new_project_id(), name=request.name.strip() or "Untitled")
+    name = request.name.strip() or "Untitled"
+    # The id becomes the filename, so derive it from the name to keep projects/ readable.
+    project = Project(id=project_store.new_project_id(name), name=name)
     project_store.save_project(project)
     return project
 
