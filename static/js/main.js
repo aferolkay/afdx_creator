@@ -95,6 +95,30 @@
     });
   }
 
+  /* Undo restores a whole earlier project state, so every view has to be redrawn from it --
+     the graph, the table and the settings forms all hold their own copy of what to display. */
+  function undoLastChange() {
+    if (!Store.undo()) return;
+    GraphEditor.render();
+    GraphEditor.fit();
+    VLTable.refresh();
+    SettingsPanel.renderGeneral();
+    flashStatus("Reverted the last change");
+  }
+
+  let flashTimer = null;
+  function flashStatus(text) {
+    const el = document.getElementById("save-state");
+    if (!el) return;
+    el.textContent = text;
+    if (flashTimer) clearTimeout(flashTimer);
+    // Hand the element back by re-deriving it, not by restoring the text we saw: an edit made
+    // during the flash would otherwise be overwritten with a stale "Saved".
+    flashTimer = setTimeout(() => {
+      if (el.textContent === text) Store.refreshSaveIndicator();
+    }, 2000);
+  }
+
   function showTab(name) {
     const tab = document.querySelector(`.tab[data-tab="${name}"]`);
     if (tab) tab.click();
@@ -109,6 +133,17 @@
     };
 
     document.getElementById("btn-save").onclick = () => Store.save();
+
+    document.getElementById("btn-undo").onclick = () => undoLastChange();
+
+    document.addEventListener("keydown", (event) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (typing) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        undoLastChange();
+      }
+    });
 
     document.getElementById("btn-generate").onclick = () => runAction(false);
     document.getElementById("btn-validate").onclick = () => runAction(true);

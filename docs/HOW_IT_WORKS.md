@@ -140,9 +140,17 @@ afdx_generator/
 
 ### Step 2 — Autosave
 
-`state.js` waits **0.8 seconds** after your last change, then sends the whole project to the
+`state.js` waits **2 seconds** after your last change, then sends the whole project to the
 backend. (The wait is why dragging a node doesn't cause hundreds of saves.) The indicator top-right
 shows *Unsaved changes → Saving… → Saved*.
+
+If you close the tab with a save still pending, it is sent anyway using a `keepalive` request,
+which — unlike a normal one — is allowed to outlive the page.
+
+**Undo.** Every change also pushes the previous state onto a small history, so **Undo** in the
+toolbar (or Ctrl+Z) steps back through the last **3** changes. It works for anything: topology,
+virtual links, settings. An undo saves immediately rather than waiting, so what you see is what is
+on disk. The history is cleared when you switch projects, and there is no redo.
 
 The message goes out through `static/js/api.js`, the only file that talks to the backend.
 
@@ -279,7 +287,8 @@ is how a bounded run is *supposed* to end).
 | **Change colours / sizes / layout** | `static/css/app.css` | Colour variables at the top |
 | **Change the wording on screen** | `templates_html/index.html` | Ordinary text |
 | **Change how the diagram behaves** | `static/js/graph_editor.js` | |
-| **Change how often it autosaves** | `static/js/state.js` | Search for `800` (milliseconds) |
+| **Change how often it autosaves** | `static/js/state.js` | `SAVE_DELAY_MS` at the top |
+| **Change how many undo steps are kept** | `static/js/state.js` | `MAX_UNDO` at the top |
 | **Change where files are written** | `storage/paths.py` | |
 
 > ⚠️ **The one duplicated piece of logic.** The rho/sigma formula exists twice: in Python
